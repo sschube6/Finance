@@ -8,7 +8,7 @@ from matplotlib import pyplot
 today = time.strftime("%Y-%m-%d")
 
 ticker = 'MSFT'
-startDate = '2015-11-01'
+startDate = '2015-01-01'
 endDate = today
 
 
@@ -25,22 +25,32 @@ def fetchstock(ticker, startDate, endDate):
         ('env', 'store://datatables.org/alltableswithkeys'),
         ('callback', '')])
 
+    twait = 5  # waiting time to not exceed yahoo quota
+    tstart = time.time()
     response = urllib2.urlopen(url)
+    tend = time.time()
+    tdiff = tend-tstart
+    time.sleep(max(0, twait-tdiff))
     return response  # ''.join(response.readlines())
 
 response = fetchstock(ticker, startDate, today)
 data = json.load(response)
-node = data['query']['results']['quote']
+try:
+    node = data['query']['results']['quote']
+except TypeError:
+    node = []
+
 # for i, entry in enumerate(node):
 #     keys = ['Date', 'Close', 'Volume']
 #     print [entry.get(key) for key in keys]
 
 xval, xticklabel, yval = [], [], []
-for i, entry in enumerate(node):
+for i, entry in enumerate(reversed(node)):
     xval.append(i)
     xticklabel.append(entry['Date'])
     yval.append(entry['Close'])
 
 pyplot.plot(xval, yval)
 pyplot.xticks(xval, xticklabel, rotation=80)
+pyplot.subplots_adjust(bottom=0.15)
 pyplot.show()
